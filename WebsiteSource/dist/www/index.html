@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Code Lakeland Demo</title>
+  <style>
+    .no-gutters {
+      padding: 0;
+    }
+  </style>
+  <script src="/assets/main.bundle.js"></script>
+</head>
+
+<body id="body">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Jesse Schein - Code Lakeland Demo</a>
+
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row" style="height:calc(100vh - 56px);">
+
+      <!-- QUEUE -->
+      <div class="col-lg-4 col-sm-12" style="border: 1px black solid;height:calc(50vh - 28px);max-height:calc(50vh - 28px);">
+        <h1>Queue</h1>
+
+        <!--COLOR QUEUE -->
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-12" style="border: 1px solid black;width:100%">
+              <div class="row" id="ColorQueue">
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--COLOR INPUT -->
+        <div class="container" style="margin-top:2%;">
+          <div class="row">
+            <div class="col-lg-12" style="border: 1px solid black;width:100%;">
+
+              <div class="row" style="margin-top:2%;padding:5%">
+                <div class="col-lg-6">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="Span-Color">Color</span>
+                    </div>
+                    <input class="form-control" id="colorInput" type='color' style="height:30px" name='color' />
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="Span-Duration">Duration</span>
+                    </div>
+                    <input class="form-control" id="durationInput" type='number' pattern="\d*" min="1" max="10" value="1" name='color' />
+                  </div>
+                </div>
+                <div class="col-lg-6" style="margin-top:2%">
+                  <button class="btn-primary btn" onclick="sendColor()">Submit</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- CHAT -->
+      <div id="chatDiv" class="col-lg-8 col-sm-12 chat" style="border: 1px black solid;overflow-y:auto;height:calc(50vh - 28px);">
+        <h1>Chat</h1>
+        <div class="container-fluid" id="chat">
+          <div class="row" style="margin-top:1%">
+          </div>
+        </div>
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id="Span-Message">Message</span>
+                </div>
+                <input type="text" id="messageInput" disabled="true" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" id="messageButton" disabled="true" onClick="sendMessage()" type="button">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+  </div>
+  </div>
+
+  <div class="modal fade" id="ModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Enter Name</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="Span-Username">Name</span>
+            </div>
+            <input type="text" id="nameInput" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCloseModal" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="setName()">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+ 
+  
+</body>
+</html>
