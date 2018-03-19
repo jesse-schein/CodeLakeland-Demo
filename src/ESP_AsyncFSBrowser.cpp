@@ -1,49 +1,55 @@
 #include <Arduino.h>
 
+//WIFI
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 #include <FS.h>
 #include <SPIFFS.h>
 
+//WEB SERVER
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFSEditor.h>
-#include <ArduinoOTA.h>
+//#include <ArduinoOTA.h>
 #include <Hash.h>
 
+//JSON SUPPORT
 #include <ArduinoJson.h>
 
+//SMART LED
 #include <Adafruit_NeoPixel.h>
 #define PIXEL_PIN    15
 #define PIXEL_COUNT  8
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-
+//CUSTOM HEADERS
 #include <color.h>
 #include <ssid.h>
 
-// SKETCH BEGIN
+// HTTP SERVER AND WEBSOCKET SERVER
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+
+//COLORQUEUE
 uint32_t messageId = 1;
 ColorQueue Queue[500];
 
+//WEBSOCKET CALLBACK
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  //IF CLINET IS FIRST CONNECTIONG
+  //SEND THEM THEIR CLIENT ID
   if(type == WS_EVT_CONNECT){
     Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-
-    String id = String(client->id());
     String json;
-
     DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
-
-    root["id"] = id;
+    root["id"] = String(client->id());
     root["action"] = "connected";
     root.printTo(json);
     client->text(json);
 
+  //FUNCTION THAT GETS CALLES IF CLIENT DISCONNECTS
   } else if(type == WS_EVT_DISCONNECT){
     Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
   } else if(type == WS_EVT_ERROR){
@@ -52,9 +58,9 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     AwsFrameInfo * info = (AwsFrameInfo*)arg;
     String msg = "";
     if(info->final && info->index == 0 && info->len == len){
-      //the whole message is in a single frame and we got all of it's data
-      //Serial.printf("[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
-
+      //IF THE MESSAGE IS OF TYPE TEXT
+      //LOOP THROUGH THE DATA AND ADD
+      //TO THE MESSAGE STRING
       if(info->opcode == WS_TEXT){
         for(size_t i=0; i < info->len; i++) {
           msg += (char) data[i];
@@ -67,19 +73,19 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
         }
       }
 
-      //Serial.printf("%s\n",msg.c_str());
-
-      if(msg == "heap"){
-        String heap = String(ESP.getFreeHeap());
-        client->text(heap);
-      }
-
+    //PARSE THE JSON MESSAGE THAT
+    //CAME FROM THE CLIENT
     DynamicJsonBuffer jsonReadBuffer;
     JsonObject& rootRead = jsonReadBuffer.parseObject(msg);
     String action = rootRead["action"];
 
-
+    //USE THE ACTION PROPERTY
+    //FROM THE MESSAGE TO DETERMINE WHAT
+    //TO DO WITH THE MESSAGE
     if(action == "message"){
+      //THE MESSAGE ACTION IS MESSAGE
+      //SEND ALL CLIENTS THE MESSAGE BACK
+      //FOR THE CHAT
       String user = rootRead["user"];
       String msg = rootRead["msg"];
       Serial.printf("User: %S Message:%S \n",user.c_str(),msg.c_str());
@@ -87,22 +93,26 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       String json;
       DynamicJsonBuffer jsonBuffer;
       JsonObject& root = jsonBuffer.createObject();
-
       root["name"] = user;
       root["action"] = "message";
       root["id"] = client->id();
       root["msg"] = msg;
       root.printTo(json);
-
       ws.textAll(json);
     }
     if(action == "color"){
+      //IF THE ACTION IS COLOR
+      //PARSE THE DATA INTO AN OBJECT AND
+      //ADD IT TO THE QUEUE
       uint8_t r = rootRead["data"]["color"]["r"];
       uint8_t g = rootRead["data"]["color"]["g"];
       uint8_t b = rootRead["data"]["color"]["b"];
       uint8_t d = rootRead["data"]["duration"];
+      Queue[messageId] = ColorQueue(r,g,b,d,messageId);
+
       Serial.printf("R: %d G: %d B: %d Duration: %d \n",r,g,b,d);
 
+      //SEND MESSAGE TO EVERYONE CONTAINING THE COLOR INFORMATION
       rootRead["id"] = client->id();
       rootRead["messageid"] = messageId;
 
@@ -110,17 +120,15 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       rootRead.printTo(json);
       ws.textAll(json);
 
-      Queue[messageId] = ColorQueue(r,g,b,d,messageId);
-      //Serial.println(ESP.getFreeHeap());
-      //Serial.println(Queue[messageId]._messageId);
-
+      //INCREMENT THE MESSAGEID
       messageId++;
     }
-
   }
 }
 }
 
+//SSID INFORMATION NORMALLY GOES HERE
+//THIS IS JUST AN EXAMPLE
 const char* example_ssid = "ssid";
 const char* example_password = "password";
 const char * hostName = "esp32";
@@ -128,6 +136,8 @@ const char* http_username = "admin";
 const char* http_password = "admin";
 
 
+//THIS FUNCTION READS EVERY FILE ON THE FLASH
+//MEMORY AND LISTS THEIR NAMES, PATH, AND SIZE
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\r\n", dirname);
 
@@ -159,10 +169,12 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     }
 }
 
+//BEGIN THE MAIN PROGRAM
 void setup(){
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  //WiFi.hostname(hostName);
+
+  //START THE WIFI
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(hostName);
   WiFi.begin(ssid, password);
@@ -177,43 +189,33 @@ void setup(){
 
   Serial.print("IP Address: ");Serial.println(WiFi.localIP());
 
-
   if (!MDNS.begin(hostName)) {
     Serial.println("Error setting up MDNS responder!");
         delay(1000);
   }
 
-  //Send OTA events to the browser
-  ArduinoOTA.onStart([]() { });
-  ArduinoOTA.onEnd([]() {  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    char p[32];
-    sprintf(p, "Progress: %u%%\n", (progress/(total/100)));
-
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-  });
-  ArduinoOTA.setHostname(hostName);
-  ArduinoOTA.begin();
 
   MDNS.addService("http","tcp",80);
 
+  //INITIALIZE THE FLASH MEMORY TO SERVE WEBPAGES FROM
   Serial.println(SPIFFS.begin());
-
-
   listDir(SPIFFS, "/", 0);
 
+  //ADD WEBSOCKET CALLBACK FUNCTION FOR DATA
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
 
-
+  //SERVES THE MOBILE IDE WITH A USERNAME AND PASSWORD
   server.addHandler(new SPIFFSEditor(SPIFFS,http_username,http_password));
 
+  //THIS FUNCTION ROUTES ALL BASE DIRECTORY
+  //WEB REQUESTS TO THE WWW FOLDER
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
   server.serveStatic("/www/", SPIFFS, "/www/").setDefaultFile("index.html");
+
+  //THIS FUNCTION SERVERS THE ASSETS FILES SO THEY WILL BE CACHED
+  //THE FILE IS QUITE LARGE SO WE DON'T WANT THE CLIENTS TO KEEP REQUESTING
   server.serveStatic("/assets/", SPIFFS, "/assets/").setCacheControl("max-age=6000");
-  //server.serveStatic("/", SPIFFS, "/").setCacheControl("max-age=6000");
-  //server.serveStatic("/bootstrap.min.js",SPIFFS,"/bootstrap.min.js").setCacheControl("max-age=600");
 
   server.onNotFound([](AsyncWebServerRequest *request){
     Serial.printf("NOT_FOUND: ");
@@ -280,10 +282,12 @@ void setup(){
       Serial.printf("BodyEnd: %u\n", total);
   });
 
+  //START THE HTTP SERVER
   Serial.println("HTTP Server Starting");
   server.begin();
   Serial.println("HTTP Server Started");
 
+  //START THE LEDS
   Serial.println("Setting up LEDS");
   strip.setBrightness(50);
   strip.begin();
@@ -292,16 +296,18 @@ void setup(){
 
 }
 
+//QUEUE INFORMATION
 uint16_t processedId = 1;
 unsigned long lastCheck = 0;
 
+//FUNCTION CHANGES THE LED COLORS FOR THE WHOLE STRIP
 void changeLedColor(uint8_t r,uint8_t g, uint8_t b){
   for (int i = 0;i<PIXEL_COUNT;i++){
     strip.setPixelColor(i, r, g, b);
   }
   strip.show();
 }
-
+//FUNCTION TO RUN TO CHECK IF THE QUEUE NEEDS TO BE PROCESSED
 void queueHandler(){
   uint8_t duration = Queue[processedId]._duration;
   unsigned long now = millis();
@@ -314,10 +320,15 @@ void queueHandler(){
       lastCheck = millis();
     }
 
+    //CHECKS IF THE LAST TIME WE CHECKED WAS GREATER THAN THE
+    //DURATION THAT THE COLOR WAS SUPPOSED TO BE SET FOR
     if((now - lastCheck) > (duration * 1000)){
+      //THIS CODE GETS HIT ONCE THE TOTAL DURATION
+      //FOR THE COLOR MESSAGE HAS BEEN REACHED
+      //ALERTS ALL CONNECTED CLIENTS THAT THE MESSAGE
+      //PROCESSED
       Serial.printf("Processed Queue ID: %d \n",processedId);
       lastCheck = millis();
-
 
       String json;
       DynamicJsonBuffer jsonBuffer;
@@ -331,14 +342,21 @@ void queueHandler(){
       processedId++;
     }
   }
+  //IF NO QUEUE MESSAGES SET STRIP TO HAVE NO COLOR
   changeLedColor(0, 0, 0);
 }
 
+//THIS CODE RUNS EVERY AVAILABLE CHANCE
 void loop(){
-  ArduinoOTA.handle();
+
+  //SAVE CPU TIME TO ONLY RUN CALLBACK WHEN WE NEED
+  //TO NOT BLOCK THE CPU
   if(processedId < messageId){
-  queueHandler();
-}else{lastCheck=millis();}
+    queueHandler();
+  }
+  else{
+    lastCheck=millis();
+  }
 
 
 }
