@@ -15,16 +15,13 @@
 #include <ArduinoJson.h>
 
 #include <color.h>
+#include <ssid.h>
 
 // SKETCH BEGIN
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 uint32_t messageId = 1;
 ColorQueue Queue[500];
-
-
-
-
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   if(type == WS_EVT_CONNECT){
@@ -118,9 +115,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 }
 }
 
-
-const char* ssid = "SSID";
-const char* password = "PASSWORD";
+const char* example_ssid = "ssid";
+const char* example_password = "password";
 const char * hostName = "esp32";
 const char* http_username = "admin";
 const char* http_password = "admin";
@@ -174,7 +170,8 @@ void setup(){
     WiFi.begin(ssid, password);
   }
 
-  Serial.println(WiFi.localIP());
+  Serial.print("IP Address: ");Serial.println(WiFi.localIP());
+  Serial.print("Flash Size: ");Serial.println(ESP.getFlashChipSize());
   if (!MDNS.begin(hostName)) {
     Serial.println("Error setting up MDNS responder!");
         delay(1000);
