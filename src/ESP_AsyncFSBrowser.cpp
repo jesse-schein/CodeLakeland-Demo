@@ -14,6 +14,12 @@
 
 #include <ArduinoJson.h>
 
+#include <Adafruit_NeoPixel.h>
+#define PIXEL_PIN    15
+#define PIXEL_COUNT  8
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+
 #include <color.h>
 #include <ssid.h>
 
@@ -153,8 +159,6 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     }
 }
 
-
-
 void setup(){
   Serial.begin(115200);
   Serial.setDebugOutput(true);
@@ -162,7 +166,8 @@ void setup(){
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(hostName);
   WiFi.begin(ssid, password);
-  Serial.println("COnnecting Wifi");
+
+  Serial.println("Connecting Wifi");
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.printf("STA: Failed!\n");
     WiFi.disconnect(false);
@@ -171,7 +176,8 @@ void setup(){
   }
 
   Serial.print("IP Address: ");Serial.println(WiFi.localIP());
-  Serial.print("Flash Size: ");Serial.println(ESP.getFlashChipSize());
+
+
   if (!MDNS.begin(hostName)) {
     Serial.println("Error setting up MDNS responder!");
         delay(1000);
@@ -274,17 +280,35 @@ void setup(){
       Serial.printf("BodyEnd: %u\n", total);
   });
 
+  Serial.println("HTTP Server Starting");
   server.begin();
+  Serial.println("HTTP Server Started");
+
+  Serial.println("Setting up LEDS");
+  strip.setBrightness(50);
+  strip.begin();
+  strip.show();
+  Serial.println("LEDS Setup Complete");
+
 }
 
 uint16_t processedId = 1;
 unsigned long lastCheck = 0;
+
+void changeLedColor(uint8_t r,uint8_t g, uint8_t b){
+  for (int i = 0;i<PIXEL_COUNT;i++){
+    strip.setPixelColor(i, r, g, b);
+  }
+  strip.show();
+}
 
 void queueHandler(){
   uint8_t duration = Queue[processedId]._duration;
   unsigned long now = millis();
 
   if(processedId < messageId){
+    ColorQueue currentMessage = Queue[processedId];
+    changeLedColor(currentMessage._r, currentMessage._g, currentMessage._b);
 
     if(lastCheck == 0){
       lastCheck = millis();
@@ -307,6 +331,7 @@ void queueHandler(){
       processedId++;
     }
   }
+  changeLedColor(0, 0, 0);
 }
 
 void loop(){
