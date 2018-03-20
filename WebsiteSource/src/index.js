@@ -31,7 +31,7 @@ ws.onopen = function() {
 // Log errorss
 ws.onerror = function(error) {
   console.log('WebSocket Error ' + error);
-}; 
+};
 
 // Log messages from the server
 ws.onmessage = function(e) {
@@ -205,4 +205,30 @@ window.addColor = (payload) => {
 window.processColor = (payload)=>{
   let id = payload.messageid;
   $(`#msgid${id}`).fadeOut('slow',()=>$(this).remove());
+}
+
+window.alert = ()=>{
+  $("body").append(`
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    Duration must be between 1 and 10
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+    `);
+
+  window.setTimeout(()=>{
+    $('.alert').alert("close");
+  },2000);
+}
+
+window.durationChange = ()=>{
+  let duration = parseInt($("#durationInput").val());
+  if (duration > 10){
+    $("#durationInput").val(10);
+    alert();
+  }else if(duration < 1){
+    $("#durationInput").val(1);
+    alert();
+  }
 }

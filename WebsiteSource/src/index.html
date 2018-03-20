@@ -59,7 +59,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text" id="Span-Duration">Duration</span>
                     </div>
-                    <input class="form-control" id="durationInput" type='number' pattern="\d*" min="1" max="10" value="1" name='color' />
+                    <input class="form-control" onchange="durationChange()" id="durationInput" type='number' pattern="\d*" min="1" max="10" value="1" name='color' />
                   </div>
                 </div>
                 <div class="col-lg-6" style="margin-top:2%">
@@ -129,6 +129,13 @@
   </div>
   </div>
 
+  <style>
+    .alert {
+      position: absolute;
+      top: 5%;
+      left: 5%;
+    }
+  </style>
 
 </body>
 

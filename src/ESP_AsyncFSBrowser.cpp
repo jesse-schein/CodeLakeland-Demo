@@ -107,21 +107,24 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       uint8_t r = rootRead["data"]["color"]["r"];
       uint8_t g = rootRead["data"]["color"]["g"];
       uint8_t b = rootRead["data"]["color"]["b"];
-      uint8_t d = rootRead["data"]["duration"];
-      Queue[messageId] = ColorQueue(r,g,b,d,messageId);
+      uint32_t d = rootRead["data"]["duration"];
+      if(d <= 10){
+        Queue[messageId] = ColorQueue(r,g,b,d,messageId);
 
-      Serial.printf("R: %d G: %d B: %d Duration: %d \n",r,g,b,d);
+        Serial.printf("R: %d G: %d B: %d Duration: %d \n",r,g,b,d);
 
-      //SEND MESSAGE TO EVERYONE CONTAINING THE COLOR INFORMATION
-      rootRead["id"] = client->id();
-      rootRead["messageid"] = messageId;
+        //SEND MESSAGE TO EVERYONE CONTAINING THE COLOR INFORMATION
+        rootRead["id"] = client->id();
+        rootRead["messageid"] = messageId;
 
-      String json;
-      rootRead.printTo(json);
-      ws.textAll(json);
+        String json;
+        rootRead.printTo(json);
+        ws.textAll(json);
 
-      //INCREMENT THE MESSAGEID
-      messageId++;
+        //INCREMENT THE MESSAGEID
+        messageId++;
+      }
+
     }
   }
 }
