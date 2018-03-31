@@ -134,7 +134,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 //THIS IS JUST AN EXAMPLE
 const char* example_ssid = "ssid";
 const char* example_password = "password";
-const char * hostName = "esp32";
+const char* hostName = "esp32";
 const char* http_username = "admin";
 const char* http_password = "admin";
 
