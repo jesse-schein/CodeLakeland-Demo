@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 //WIFI
 #include <WiFi.h>
 #include <WiFiClient.h>
