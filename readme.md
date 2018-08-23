@@ -1,5 +1,9 @@
 # Readme
 
+## About
+
+This repository was used for a meetup group to explain how modern web technology can be used in conjunction with microcontrollers, specifically the ESP32 and ESP8266.
+
 ## Prerequiste Knowledge
 
 - Microcontrollers
@@ -11,7 +15,7 @@
 
 ## IDE Dependencies
 
-- Visual Studio Code
+- Visual Studio Code (VSC)
 - PlatformIO IDE - VSC Extension
 - Clang - For Autocompletion
 - NodeJS
